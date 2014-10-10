@@ -1,20 +1,25 @@
 import json
 from django.http import HttpResponse
+from api import dbOperations
 true = True
 false = False
 null = None
 
 def create(request):
-	data = {
-				"code": 0,
-			    "response": {
-			        "id": 1,
-			        "name": "Forum With Sufficiently Large Name",
-			        "short_name": "forumwithsufficientlylargename",
-			        "user": "richard.nixon@example.com"
-	    		}
-			}
-	return HttpResponse(json.dumps(data))
+	if request.method == "POST":
+		dataRequest = json.loads(request.body)
+		dataRequired = ["name", "short_name", "user"]
+		try:
+			for a in dataRequired:
+				if a not in dataRequest:
+					dataResponse = {"code": 4, "response": "There is no element " + a}
+			forum = dbOperations.forum.create(name=dataRequest["name"], short_name=dataRequest["short_name"], user=dataRequest["user"])
+		except Exception as e:
+			dataResponse = {"code": 4, "response": e.message}
+		dataResponse = {"code": 0, "response": forum}
+	else:
+		dataResponse = {"code": 4, "response": "Method = " + request.method}
+	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 def details(request):
 	data = {
 				"code": 0,
