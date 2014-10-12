@@ -1,125 +1,94 @@
 import json
 from django.http import HttpResponse
-from api import dbOperations
+import api.dbOperations.forum
+from collections import defaultdict
+
+responseTemplate = ("code","response")
+codes={"OK":0,"NOT FOUND":1,"INVALID REQUEST":2,"UNCORRECT REQUEST":3,"UNKNOWN ERROR":4,"USER EXISTS":5}
+
+def getResponse(code,response):
+	return dict(zip(responseTemplate,(codes[code],response)))
+
 true = True
 false = False
 null = None
 
 def create(request):
 	if request.method == "POST":
-		dataRequest = json.loads(request.body)
+		jsonRequest = json.loads(request.body)
+		dataRequest = {}
 		dataRequired = ["name", "short_name", "user"]
+		for a in dataRequired:
+			if a not in jsonRequest:
+				dataResponse = getResponse("UNCORRECT REQUEST","Element '" + a + "' not found in request")
+				return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+			else:
+				dataRequest[a] = jsonRequest[a]
 		try:
-			for a in dataRequired:
-				if a not in dataRequest:
-					dataResponse = {"code": 4, "response": "There is no element " + a}
-			forum = dbOperations.forum.create(name=dataRequest["name"], short_name=dataRequest["short_name"], user=dataRequest["user"])
+			forum = api.dbOperations.forum.create(dataRequest)
 		except Exception as e:
-			dataResponse = {"code": 4, "response": e.message}
-		dataResponse = {"code": 0, "response": forum}
+			print(e)
+			print(e.message)
+			print(e.args[1])
+			dataResponse = getResponse("UNKNOWN ERROR",e.args[1])
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+		dataResponse = getResponse("OK",forum)
 	else:
-		dataResponse = {"code": 4, "response": "Method = " + request.method}
+		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
 	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+
 def details(request):
-	data = {
-				"code": 0,
-			    "response": {
-			        "id": 4,
-			        "name": "\u0424\u043e\u0440\u0443\u043c \u0422\u0440\u0438",
-			        "short_name": "forum3",
-			        "user": {
-			            "about": "hello im user2",
-			            "email": "example2@mail.ru",
-			            "followers": [],
-			            "following": [],
-			            "id": 3,
-			            "isAnonymous": false,
-			            "name": "Jey",
-			            "subscriptions": [],
-			            "username": "user2"
-			        }
-			    }
-			}
-	return HttpResponse(json.dumps(data))
+	if request.method == "GET":
+		dataRequired = ["forum"]
+		dataPossible = ["related"]
+		dataRequest = {}
+		for a in dataRequired:
+			if not request.GET.get(a):
+				dataResponse = getResponse("UNCORRECT REQUEST","Element '" + a + "' not found in request")
+				return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+			else:
+				dataRequest[a] = request.GET.get(a)
+		for a in dataPossible:
+			if request.GET.get(a):
+				dataRequest[a] = request.GET.get(a)
+			else:
+				dataRequest[a] = []
+		try:
+			forum = api.dbOperations.forum.details(dataRequest)
+		except Exception as e:
+			dataResponse = getResponse("UNKNOWN ERROR",str(e))
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+		dataResponse = getResponse("OK",forum)
+	else:
+		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+
 def listPosts(request):
-	data = {
-				"code": 0,
-			    "response": [
-			        {
-			            "date": "2014-01-03 00:08:01",
-			            "dislikes": 0,
-			            "forum": {
-			                "id": 2,
-			                "name": "Forum I",
-			                "short_name": "forum1",
-			                "user": "example3@mail.ru"
-			            },
-			            "id": 5,
-			            "isApproved": false,
-			            "isDeleted": true,
-			            "isEdited": false,
-			            "isHighlighted": false,
-			            "isSpam": false,
-			            "likes": 0,
-			            "message": "my message 1",
-			            "parent": null,
-			            "points": 0,
-			            "thread": {
-			                "date": "2013-12-30 00:01:01",
-			                "dislikes": 0,
-			                "forum": "forum1",
-			                "id": 3,
-			                "isClosed": false,
-			                "isDeleted": false,
-			                "likes": 0,
-			                "message": "hey hey!",
-			                "points": 0,
-			                "posts": 2,
-			                "slug": "thread2",
-			                "title": "Thread II",
-			                "user": "example3@mail.ru"
-			            },
-			            "user": "richard.nixon@example.com"
-			        },
-			        {
-			            "date": "2014-01-03 00:01:01",
-			            "dislikes": 0,
-			            "forum": {
-			                "id": 2,
-			                "name": "Forum I",
-			                "short_name": "forum1",
-			                "user": "example3@mail.ru"
-			            },
-			            "id": 4,
-			            "isApproved": true,
-			            "isDeleted": false,
-			            "isEdited": false,
-			            "isHighlighted": false,
-			            "isSpam": false,
-			            "likes": 0,
-			            "message": "my message 1",
-			            "parent": null,
-			            "points": 0,
-			            "thread": {
-			                "date": "2013-12-30 00:01:01",
-			                "dislikes": 0,
-			                "forum": "forum1",
-			                "id": 3,
-			                "isClosed": false,
-			                "isDeleted": false,
-			                "likes": 0,
-			                "message": "hey hey!",
-			                "points": 0,
-			                "posts": 2,
-			                "slug": "thread2",
-			                "title": "Thread II",
-			                "user": "example3@mail.ru"
-			            },
-			            "user": "example@mail.ru"
-			        }
-			    ]
-			}
-	return HttpResponse(json.dumps(data))
+	if request.method == "GET":
+		dataRequired = ["forum"]
+		dataPossible = ["since","limit","sort","order","related"]
+		dataRequest = defaultdict(list)
+		for a in dataRequired:
+			if not request.GET.get(a):
+				dataResponse = getResponse("UNCORRECT REQUEST","Element '" + a + "' not found in request")
+				return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+			else:
+				dataRequest[a].append(request.GET.get(a))
+		for a in dataPossible:
+			if request.GET.get(a):
+				dataRequest[a].append(request.GET.get(a))
+			else:
+				dataRequest[a] = []
+		try:
+			posts = api.dbOperations.forum.listPosts(dataRequest)
+		except Exception as e:
+			dataResponse = getResponse("UNKNOWN ERROR",str(e))
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+		dataResponse = getResponse("OK",posts)
+	else:
+		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+	
 def listThreads(request):
 	data = {
 				"code": 0,
