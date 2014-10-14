@@ -15,7 +15,11 @@ null = None
 
 def create(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequired = ["date", "thread", "message", "user", "forum"]
 		dataPosible = ["parent", "isApproved", "isHighlighted", "isEdited", "isSpam", "isDeleted"]
 		dataRequest = {}
@@ -100,7 +104,11 @@ def list(request):
 
 def remove(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequired = ["post"]
 		dataPosible = []
 		dataRequest = {}
@@ -127,7 +135,11 @@ def remove(request):
 
 def restore(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequired = ["post"]
 		dataPosible = []
 		dataRequest = {}
@@ -154,7 +166,11 @@ def restore(request):
 
 def update(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequired = ["post", "message"]
 		dataPosible = []
 		dataRequest = {}
@@ -181,7 +197,11 @@ def update(request):
 
 def vote(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequired = ["post", "vote"]
 		dataPosible = []
 		dataRequest = {}

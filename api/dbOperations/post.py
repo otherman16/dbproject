@@ -1,4 +1,7 @@
-from api.dbOperations import dbConnection, user, thread
+from api.dbOperations import dbConnection
+import api.dbOperations.user
+import api.dbOperations.forum
+import api.dbOperations.thread
 from collections import OrderedDict, defaultdict
 
 fields = ("date", "dislikes", "forum", "id", "isApproved", "isDeleted", "isEdited", "isHighlighted", "isSpam", "likes", "message", "parent", "points", "thread", "user")
@@ -50,14 +53,16 @@ def details(data):
 def list(data):
 	entity = None
 	if data["forum"]:
-		dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"]):
-		entity = "forum"
-	else if data["thread"]:
-		dbConnection.exists(entity="thread", identificator="id", value=data["thread"]):
-		entity = "thread"
-	else if data["user"]:
-		dbConnection.exists(entity="user", identificator="email", value=data["user"]):
-		entity = "user"
+		if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"][0]):
+			entity = "forum"
+	else:
+		if data["thread"]:
+			if dbConnection.exists(entity="thread", identificator="id", value=data["thread"][0]):
+				entity = "thread"
+		else:
+			if data["user"]:
+				if dbConnection.exists(entity="user", identificator="email", value=data["user"][0]):
+					entity = "user"
 	since = '2014-01-01 00:00:00'
 	order = 'desc'
 	sort = 'flat'
@@ -81,30 +86,30 @@ def list(data):
 	return posts
 
 def remove(data):
-	dbConnection.exists(entity="post", identificator="id", value=data["post"]):
-	dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id=%s;",(data["post"], ))
-	return OrderedDict(zip(("post",),(data["post"],))
+	if dbConnection.exists(entity="post", identificator="id", value=data["post"]):
+		dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id=%s;",(data["post"], ))
+		return OrderedDict(zip(("post",),(data["post"],)))
 
 def restore(data):
-	dbConnection.exists(entity="post", identificator="id", value=data["post"]):
-	dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id=%s;",(data["post"], ))
-	return OrderedDict(zip(("post",),(data["post"],))
+	if dbConnection.exists(entity="post", identificator="id", value=data["post"]):
+		dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id=%s;",(data["post"], ))
+		return OrderedDict(zip(("post",),(data["post"],)))
 
 def update(data):
-	dbConnection.exists(entity="post", identificator="id", value=data["post"]):
-	dbConnection.execQuery("UPDATE post SET message=%s WHERE id=%s;",(data["message"], data["post"], ))
-	dataRequest = defaultdict(list)
-	dataRequest["post"].append(data["post"])
-	dataRequest["related"] = []
-	return details(dataRequest)
+	if dbConnection.exists(entity="post", identificator="id", value=data["post"]):
+		dbConnection.execQuery("UPDATE post SET message=%s WHERE id=%s;",(data["message"], data["post"], ))
+		dataRequest = defaultdict(list)
+		dataRequest["post"].append(data["post"])
+		dataRequest["related"] = []
+		return details(dataRequest)
 
 def vote(data):
-	dbConnection.exists(entity="post", identificator="id", value=data["post"]):
-	if data["vote"] == 1:
-		dbConnection.execQuery("UPDATE post SET likes = likes + 1, points = points + 1 WHERE id=%s;",(data["post"], ))
-	else:
-		dbConnection.execQuery("UPDATE post SET dislikes = dislikes + 1, points = points - 1 WHERE id=%s;",(data["post"], ))
-	dataRequest = defaultdict(list)
-	dataRequest["post"].append(data["post"])
-	dataRequest["related"] = []
-	return details(dataRequest)
+	if dbConnection.exists(entity="post", identificator="id", value=data["post"]):
+		if data["vote"] == 1:
+			dbConnection.execQuery("UPDATE post SET likes = likes + 1, points = points + 1 WHERE id=%s;",(data["post"], ))
+		else:
+			dbConnection.execQuery("UPDATE post SET dislikes = dislikes + 1, points = points - 1 WHERE id=%s;",(data["post"], ))
+		dataRequest = defaultdict(list)
+		dataRequest["post"].append(data["post"])
+		dataRequest["related"] = []
+		return details(dataRequest)

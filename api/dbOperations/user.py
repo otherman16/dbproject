@@ -1,4 +1,7 @@
-from api.dbOperations import dbConnection, user, post, thread
+from api.dbOperations import dbConnection
+import api.dbOperations.forum
+import api.dbOperations.post
+import api.dbOperations.thread
 from collections import OrderedDict, defaultdict
 
 fields = ("about","email","followers","following","id","isAnonymous","name","subscriptions","username")
@@ -11,23 +14,32 @@ def create(data):
 		isAnonymous = "false"
 		if data["isAnonymous"]:
 			isAnonymous = data["isAnonymous"]
-		dbConnection.execQuery("INSERT user (username,about,name,email,isAnonymous) VALUES (%s,%s,%s,%s)",(data["username"],data["about"],data["name"],data["email"], isAnonymous, ))
+		dbConnection.execQuery("INSERT user (username,about,name,email,isAnonymous) VALUES (%s,%s,%s,%s,%s)",(data["username"],data["about"],data["name"],data["email"], isAnonymous, ))
 		dataRequest={}
 		dataRequest["user"] = data["email"]
 		return details(dataRequest)
+	else:
+		raise MyException("USER EXISTS")
 
 def details(data):
 	if dbConnection.exists(entity="user", identificator="email", value=data["user"]):
 		user = dbConnection.execQuery("SELECT about,email,id,isAnonymous,name,username FROM user WHERE email = %s;",(data["user"], ))
-		userList = list(user[0])
+		user = user[0]
+		userList = list(user)
 		userList.insert(2,[])
 		userList.insert(3,[])
-		userList.insert(8,[])
+		userList.insert(7,[])
 		user = tuple(userList)
-		user = OrderedDict(zip(fields,user[0]))
-		user["followers"] = list(dbConnection.execQuery("SELECT email_follower FROM follow where email_following = %s;",(data["user"], )))
-		user["following"] = list(dbConnection.execQuery("SELECT email_following FROM follow where email_follower = %s;",(data["user"], )))
-		user["subscriptions"] = list(dbConnection.execQuery("SELECT id_subscripting FROM follow where email_subscriber = %s;",(data["user"], )))
+		user = OrderedDict(zip(fields,user))
+		followers = dbConnection.execQuery("SELECT email_follower FROM follow where email_following = %s;",(data["user"], ))
+		following = dbConnection.execQuery("SELECT email_following FROM follow where email_follower = %s;",(data["user"], ))
+		subscriptions = dbConnection.execQuery("SELECT id_subscribing FROM subscribe where email_subscriber = %s;",(data["user"], ))
+		if followers:
+			user["followers"] = sum(followers,())
+		if following:
+			user["following"] = sum(following,())
+		if subscriptions:
+			user["subscriptions"] = sum(subscriptions,())
 		return user
 
 def follow(data):
@@ -44,14 +56,14 @@ def listFollowers(data):
 			order = data["order"][0]
 		if data["limit"]:
 			if data["since_id"]:
-				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s LIMIT %s ORDER BY user.name %s",(data["user"][0], data["since"][0], data["since"][1], data["limit"][0], order, ))
+				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s LIMIT %s ORDER BY user.name %s;",(data["user"][0], data["since"][0], data["since"][1], data["limit"][0], order, ))
 			else:
-				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s LIMIT %s ORDER BY user.name %s",(data["user"][0], data["limit"][0], order, ))
+				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s LIMIT %s ORDER BY user.name %s;",(data["user"][0], data["limit"][0], order, ))
 		else:
 			if data["since_id"]:
-				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s ORDER BY user.name %s",(data["user"][0], data["since"][0], data["since"][1], order, ))
+				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s ORDER BY user.name %s;",(data["user"][0], data["since"][0], data["since"][1], order, ))
 			else:
-				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name %s",(data["user"][0], order, ))
+				followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name %s;",(data["user"][0], order, ))
 		followers = []
 		dataRequest = {}
 		dataRequest["related"] = []
@@ -94,7 +106,7 @@ def listPosts(data):
 
 def unfollow(data):
 	if dbConnection.exists(entity="user", identificator="email", value=data["follower"]) and dbConnection.exists(entity="user", identificator="email", value=data["followee"]):
-		dbConnection.execQuery("DELETE follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"] ))
+		dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"] ))
 		dataRequest={}
 		dataRequest["user"] = data["follower"]
 		return details(dataRequest)

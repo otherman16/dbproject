@@ -1,4 +1,7 @@
-from api.dbOperations import dbConnection, user, post, thread
+from api.dbOperations import dbConnection
+import api.dbOperations.user
+import api.dbOperations.post
+import api.dbOperations.thread
 from collections import OrderedDict, defaultdict
 
 fields = ("id","name","short_name","user")

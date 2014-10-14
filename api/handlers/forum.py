@@ -15,7 +15,11 @@ null = None
 
 def create(request):
 	if request.method == "POST":
-		jsonRequest = json.loads(request.body)
+		try:
+			jsonRequest = json.loads(request.body)
+		except:
+			dataResponse = getResponse("INVALID REQUEST","Invalid JSON")
+			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
 		dataRequest = {}
 		dataRequired = ["name", "short_name", "user"]
 		for a in dataRequired:
