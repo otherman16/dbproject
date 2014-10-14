@@ -16,8 +16,8 @@ def execQuery(query, params):
 		cursor.execute(query, params)
 		result = cursor.fetchall()
 		connection.commit()
-	except Exception as e:
-		raise e
+	except Exception as e
+		raise Exception({"code":"UNKNOWN ERROR","message":str(e)})
 	finally:
 		if cursor:
 			cursor.close()
@@ -27,9 +27,7 @@ def execQuery(query, params):
 
 def exists(entity, identificator, value):
 	if not len(execQuery('SELECT id FROM ' + entity + ' WHERE ' + identificator + ' = %s', (value, ))):
-		raise Exception("No such element in entity '" + entity + "' with '" + identificator + "'='" + value + "'")
-		return False
-	return True
+		raise Exception({"code":"NOT FOUND","message":"No such element in entity '" + entity + "' with '" + identificator + "'='" + value + "'"})
 
 def notExists(entity, identificator, value):
 	if not len(execQuery('SELECT id FROM ' + entity + ' WHERE ' + identificator + ' = %s', (value, ))):

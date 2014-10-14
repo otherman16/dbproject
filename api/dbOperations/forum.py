@@ -10,51 +10,50 @@ class MyException(Exception):
 	pass
 
 def create(data):
-	if dbConnection.exists(entity="user", identificator="email", value=data["user"]):
-		if dbConnection.notExists(entity="forum", identificator="short_name", value=data["short_name"]):
-			dbConnection.execQuery("INSERT forum (name,short_name,user) VALUES (%s,%s,%s)",(data["name"],data["short_name"],data["user"], ))
-		dataRequest={}
-		dataRequest["forum"] = data["short_name"]
-		dataRequest["related"] = []
-		return details(dataRequest)
+	dbConnection.exists(entity="user", identificator="email", value=data["user"])
+	if dbConnection.notExists(entity="forum", identificator="short_name", value=data["short_name"]):
+		dbConnection.execQuery("INSERT forum (name,short_name,user) VALUES (%s,%s,%s)",(data["name"],data["short_name"],data["user"], ))
+	dataRequest={}
+	dataRequest["forum"] = data["short_name"]
+	dataRequest["related"] = []
+	return details(dataRequest)
 
 def details(data):
-	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"]):
-		forum = dbConnection.execQuery("SELECT id,name,short_name,user FROM forum WHERE short_name=%s",(data["forum"], ))
-		forum = OrderedDict(zip(fields,forum[0]))
-		if data["related"]:
-			dataRequest = {}
-			dataRequest["user"] = forum["user"]
-			forum["user"] = api.dbOperations.user.details(dataRequest)
-		return forum
+	dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"])
+	forum = dbConnection.execQuery("SELECT id,name,short_name,user FROM forum WHERE short_name=%s",(data["forum"], ))
+	forum = OrderedDict(zip(fields,forum[0]))
+	if "user" in data["related"]:
+		dataRequest = {}
+		dataRequest["user"] = forum["user"]
+		forum["user"] = api.dbOperations.user.details(dataRequest)
+	return forum
 
 def listPosts(data):
 	return api.dbOperations.post.list(data)
 
 def listThreads(data):
-	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"][0]):
+	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"]):
 		since = '2014-01-01 00:00:00'
-		order = 'desc'
+		order = 'DESC'
 		if data["since"]:
-			since = data["since"][0]
+			since = data["since"]
 		if data["order"]:
-			order = data["order"][0]
+			order = data["order"]
 		if data["limit"]:
-			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s LIMIT %s ORDER BY date %s",(data["forum"][0], since, data["limit"][0], order, ))
+			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s LIMIT %s ORDER BY date %s",(data["forum"], since, data["limit"], order, ))
 		else:
-			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s ORDER BY date %s",(data["forum"][0], since, order, ))
+			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s ORDER BY date %s",(data["forum"], since, order, ))
 		threads = []
-		dataRequest = defaultdict(list)
+		dataRequest = {}
 		dataRequest["related"] = data["related"]
 		for threadId in threadIds:
-			dataRequest["thread"].append(threadId)
+			dataRequest["thread"] = threadId
 			threads.append(api.dbOperations.thread.details(dataRequest))
-			dataRequest["thread"].remove(threadId)
 		return threads
 
 def listUsers(data):
 	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"][0]):
-		order = 'desc'
+		order = 'DESC'
 		if data["order"]:
 			order = data["order"][0]
 		if data["limit"]:
