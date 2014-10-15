@@ -93,7 +93,7 @@ def listThreads(request):
 def listUsers(request):
 	if request.method == "GET":
 		dataRequired = ["forum"]
-		dataPossible = ["since","limit","order"]
+		dataPosible = ["since","limit","order"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -102,11 +102,11 @@ def listUsers(request):
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
 		try:
-			threads = api.dbOperations.forum.listUsers(dataRequest)
+			users = api.dbOperations.forum.listUsers(dataRequest)
 		except Exception as e:
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",threads)
+		dataResponse = tools.getResponse("OK",users)
 	else:
 		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
 	return HttpResponse(dataResponse, content_type='application/json')

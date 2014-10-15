@@ -10,30 +10,34 @@ def create(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
 	dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"])
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	if not (data["forum"] == dbConnection.execQuery("SELECT forum FROM thread WHERE id = %s;", (data["thread"], ))[0]):
-		raise Exceptions({"code":"INVALID REQUEST","message":"Forum with short_name '%s' doesn't contain thread with id '%s'" % data["forum"], data["thread"]})
-	isApproved = "false"
-	isDeleted = "false"
-	isEdited = "flase"
-	isHighlighted = "false"
-	isSpam = "false"
-	parent = "null"
-	if data["isApproved"]:
+	if not (data["forum"] == dbConnection.execQuery("SELECT forum FROM thread WHERE id = %s;", (data["thread"], ))[0][0]):
+		raise Exceptions({"code":"INVALID REQUEST","message":"Forum with short_name '" + data["forum"] + "' doesn't contain thread with id '" + str(data["thread"]) + "'"})
+	isApproved = False
+	isDeleted = False
+	isEdited = False
+	isHighlighted = False
+	isSpam = False
+	parent = None
+	if "isApproved" in data and data["isApproved"]:
 		isApproved = data["isApproved"]
-	if data["isDeleted"]:
+	if "isDeleted" in data and data["isDeleted"]:
 		isDeleted = data["isDeleted"]
-	if data["isEdited"]:
+	if "isEdited" in data and data["isEdited"]:
 		isEdited = data["isEdited"]
-	if data["isHighlighted"]:
+	if "isHighlighted" in data and data["isHighlighted"]:
 		isHighlighted = data["isHighlighted"]
-	if data["isSpam"]:
+	if "isSpam" in data and data["isSpam"]:
 		isSpam = data["isSpam"]
-	if data["parent"]:
+	if "parent" in data and data["parent"]:
 		parent = data["parent"]
-	dbConnection.execQuery("INSERT post (date,forum,isApproved,isDeleted,isEdited,isHighlighted,isSpam,message,parent,thread,user) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(data["date"],data["short_name"],isApproved,isDeleted,isEdited,isHighlighted,isSpam,data["message"],parent,data["thread"],data["user"], ))
-	dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = %s;", (data["thread"], ))
+	path = None
+	if parent:
+		path = dbConnection.execQuery("SELECT CONCAT((SELECT path FROM post WHERE id = %s),'.',(SELECT COUNT(*)+1 FROM post WHERE parent = %s AND thread = %s));",(parent,parent,data["thread"], ))[0][0]
+	else:
+		path = dbConnection.execQuery("SELECT COUNT(*)+1 FROM post WHERE ISNULL(parent) AND thread = %s;",(data["thread"], ))[0][0]
 	dataRequest={}
-	dataRequest["post"] = dbConnection.execQuery("SELECT LAST_INSERT_ID();", ())[0]
+	dataRequest["post"] = dbConnection.execQuery("INSERT post (date,forum,isApproved,isDeleted,isEdited,isHighlighted,isSpam,message,parent,thread,user,path) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(data["date"],data["forum"],isApproved,isDeleted,isEdited,isHighlighted,isSpam,data["message"],parent,data["thread"],data["user"],path, ))
+	dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = %s;", (data["thread"], ))
 	dataRequest["related"] = []
 	return details(dataRequest)
 
@@ -44,45 +48,68 @@ def details(data):
 	if "user" in data["related"]:
 		dataRequest = {}
 		dataRequest["user"] = post["user"]
+		dataRequest["related"] = []
 		post["user"] = api.dbOperations.user.details(dataRequest)
 	if "forum" in data["related"]:
 		dataRequest = {}
 		dataRequest["forum"] = post["forum"]
+		dataRequest["related"] = []
 		post["forum"] = api.dbOperations.forum.details(dataRequest)
 	if "thread" in data["related"]:
 		dataRequest = {}
 		dataRequest["thread"] = post["thread"]
+		dataRequest["related"] = []
 		post["thread"] = api.dbOperations.thread.details(dataRequest)
-	return post
+	post["date"] = post["date"].strftime("%Y-%m-%d %H:%M:%S")
+	return dbConnection.fieldsToBoolean(post)
 
 def list(data):
 	entity = None
-	if data["forum"]:
+	if "forum" in data:
 		dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"])
 		entity = "forum"
-	if data["thread"]:
+	if "thread" in data:
 		dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
 		entity = "thread"
-	if data["user"]:
+	if "user" in data:
 		dbConnection.exists(entity="user", identificator="email", value=data["user"])
 		entity = "user"
 	entityVal = data[entity]
 	since = '2014-01-01 00:00:00'
 	order = 'DESC'
 	sort = 'flat'
-	if data["since"]:
+	if "since" in data and data["since"]:
 		since = data["since"]
-	if data["order"]:
+	if "order" in data and data["order"]:
 		order = data["order"]
-	if data["sort"]:
+	if "sort" in data and data["sort"]:
 		sort = data["sort"]
-	if data["limit"]:
-		postIds = dbConnection.execQuery("SELECT id FROM post WHERE %s=%s AND date>%s LIMIT %s ORDER BY date %s",(entity, entityVal since, data["limit"], order, ))
+	if "limit" in data and data["limit"]:
+		if sort == 'flat':
+			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+		else:
+			if sort == 'tree':
+				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+			else:
+				if sort == 'parent_tree':
+					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+				else:
+					raise Exception({"code":"INVALID REQUEST","message":"Invalid method of sorting '" + sort + "'"})
 	else:
-		postIds = dbConnection.execQuery("SELECT id FROM post WHERE %s=%s AND date>%s ORDER BY date %s",(entity, entityVal, since, order, ))
+		if sort == 'flat':
+			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + ";",(entityVal, since, ))
+		else:
+			if sort == 'tree':
+				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + ";",(entityVal, since, ))
+			else:
+				if sort == 'parent_tree':
+					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + ";",(entityVal, since, ))
+				else:
+					raise Exception({"code":"INVALID REQUEST","message":"Invalid method of sorting '" + sort + "'"})
+	postIds = sum(postIds,())
 	posts = []
 	dataRequest = {}
-	dataRequest["related"] = data["related"]
+	dataRequest["related"] = []
 	for postId in postIds:
 		dataRequest["post"] = postId
 		posts.append(api.dbOperations.post.details(dataRequest))
@@ -90,16 +117,16 @@ def list(data):
 
 def remove(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], )):
-		raise Exceptions({"code":"INVALID REQUEST","message":"Post with id '%s' is already deleted" % data["post"]})
+	if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+		raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s' is already deleted" % data["post"]})
 	dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id = %s;", (data["post"], ))
 	dbConnection.execQuery("UPDATE thread SET posts = posts - 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
 	return OrderedDict(zip(("post",),(data["post"],)))
 
 def restore(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], )):
-		raise Exceptions({"code":"INVALID REQUEST","message":"Post with id '%s;' doesn't deleted" % data["post"]})
+	if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+		raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s;' doesn't deleted" % data["post"]})
 	dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id = %s;", (data["post"], ))
 	dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
 	return OrderedDict(zip(("post",),(data["post"],)))

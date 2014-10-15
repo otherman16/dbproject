@@ -26,49 +26,33 @@ def details(data):
 		dataRequest = {}
 		dataRequest["user"] = forum["user"]
 		forum["user"] = api.dbOperations.user.details(dataRequest)
-	return forum
+	return dbConnection.fieldsToBoolean(forum)
 
 def listPosts(data):
 	return api.dbOperations.post.list(data)
 
 def listThreads(data):
-	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"]):
-		since = '2014-01-01 00:00:00'
-		order = 'DESC'
-		if data["since"]:
-			since = data["since"]
-		if data["order"]:
-			order = data["order"]
-		if data["limit"]:
-			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s LIMIT %s ORDER BY date %s",(data["forum"], since, data["limit"], order, ))
-		else:
-			threadIds = dbConnection.execQuery("SELECT id FROM thread WHERE forum=%s AND date>%s ORDER BY date %s",(data["forum"], since, order, ))
-		threads = []
-		dataRequest = {}
-		dataRequest["related"] = data["related"]
-		for threadId in threadIds:
-			dataRequest["thread"] = threadId
-			threads.append(api.dbOperations.thread.details(dataRequest))
-		return threads
+	return api.dbOperations.thread.list(data)
 
 def listUsers(data):
-	if dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"][0]):
-		order = 'DESC'
-		if data["order"]:
-			order = data["order"][0]
-		if data["limit"]:
-			if data["since"]:
-				userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s LIMIT %s ORDER BY user.name %s",(data["forum"][0], data["since"][0], data["since"][1], data["limit"][0], order, ))
-			else:
-				userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s LIMIT %s ORDER BY user.name %s",(data["forum"][0], data["limit"][0], order, ))
+	dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"])
+	order = 'DESC'
+	if "order" in data and data["order"]:
+		order = data["order"]
+	if "limit" in data and data["limit"]:
+		if "since" in data and data["since"]:
+			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["forum"], data["since"][0], data["since"][1], ))
 		else:
-			if data["since"]:
-				userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s ORDER BY user.name %s",(data["forum"][0], data["since"][0], data["since"][1], order, ))
-			else:
-				userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s ORDER BY user.name %s",(data["forum"][0], order, ))
-		users = []
-		dataRequest = {}
-		for userEmail in userEmails:
-			dataRequest["user"] = userEmail
-			users.append(api.dbOperations.user.details(dataRequest))
-		return users
+			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["forum"], ))
+	else:
+		if "since" in data and data["since"]:
+			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s ORDER BY user.name " + order + ";",(data["forum"], data["since"][0], data["since"][1], ))
+		else:
+			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s ORDER BY user.name " + order + ";",(data["forum"], ))
+	userEmails = sum(userEmails,())
+	users = []
+	dataRequest = {}
+	for userEmail in userEmails:
+		dataRequest["user"] = userEmail
+		users.append(api.dbOperations.user.details(dataRequest))
+	return users

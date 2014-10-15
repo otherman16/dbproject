@@ -16,6 +16,7 @@ def create(request):
 		try:
 			post = api.dbOperations.post.create(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
@@ -27,7 +28,7 @@ def create(request):
 def details(request):
 	if request.method == "GET":
 		dataRequired = ["post"]
-		dataPossible = ["related"]
+		dataPosible = ["related"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -38,6 +39,7 @@ def details(request):
 		try:
 			post = api.dbOperations.post.details(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
@@ -48,19 +50,23 @@ def details(request):
 
 def list(request):
 	if request.method == "GET":
+		dataRequired = []
 		if request.GET.get("forum"):
 			dataRequired = ["forum"]
 		if request.GET.get("thread"):
-			if not dataRequired:
+			if dataRequired:
 				dataResponse = tools.getResponse("INVALID REQUEST","There are two or more entity required")
 				return HttpResponse(dataResponse, content_type='application/json')
 			dataRequired = ["thread"]
 		if request.GET.get("user"):
-			if not dataRequired:
+			if dataRequired:
 				dataResponse = tools.getResponse("INVALID REQUEST","There are two or more entity required")
 				return HttpResponse(dataResponse, content_type='application/json')
 			dataRequired = ["user"]
-		dataPossible = ["since","limit","sort","order"]
+		if not dataRequired:
+			dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
+			return HttpResponse(dataResponse, content_type='application/json')
+		dataPosible = ["since","limit","sort","order"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -71,6 +77,7 @@ def list(request):
 		try:
 			posts = api.dbOperations.post.list(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
@@ -93,6 +100,7 @@ def remove(request):
 		try:
 			post = api.dbOperations.post.remove(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')

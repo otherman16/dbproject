@@ -16,6 +16,7 @@ def create(request):
 		try:
 			user = api.dbOperations.user.create(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
@@ -27,7 +28,7 @@ def create(request):
 def details(request):
 	if request.method == "GET":
 		dataRequired = ["user"]
-		dataPossible = []
+		dataPosible = []
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -71,7 +72,7 @@ def follow(request):
 def listFollowers(request):
 	if request.method == "GET":
 		dataRequired = ["user"]
-		dataPossible = ["limit","order","since_id"]
+		dataPosible = ["limit","order","since_id"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -82,6 +83,7 @@ def listFollowers(request):
 		try:
 			followers = api.dbOperations.user.listFollowers(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')
@@ -93,7 +95,7 @@ def listFollowers(request):
 def listFollowing(request):
 	if request.method == "GET":
 		dataRequired = ["user"]
-		dataPossible = ["limit","order","since_id"]
+		dataPosible = ["limit","order","since_id"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -115,7 +117,7 @@ def listFollowing(request):
 def listPosts(request):
 	if request.method == "GET":
 		dataRequired = ["user"]
-		dataPossible = ["limit","order","since"]
+		dataPosible = ["limit","order","since"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -126,6 +128,7 @@ def listPosts(request):
 		try:
 			posts = api.dbOperations.user.listPosts(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')

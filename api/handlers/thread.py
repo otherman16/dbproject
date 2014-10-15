@@ -49,7 +49,7 @@ def create(request):
 def details(request):
 	if request.method == "GET":
 		dataRequired = ["thread"]
-		dataPossible = ["related"]
+		dataPosible = ["related"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -70,14 +70,18 @@ def details(request):
 
 def list(request):
 	if request.method == "GET":
+		dataRequired = []
 		if request.GET.get("forum"):
 			dataRequired = ["forum"]
 		if request.GET.get("user"):
-			if not dataRequired:
+			if dataRequired:
 				dataResponse = tools.getResponse("INVALID REQUEST","There are two or more entity required")
 				return HttpResponse(dataResponse, content_type='application/json')
 			dataRequired = ["user"]
-		dataPossible = ["since","limit","order"]
+		if not dataRequired:
+			dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
+			return HttpResponse(dataResponse, content_type='application/json')
+		dataPosible = ["since","limit","order"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
@@ -99,14 +103,14 @@ def list(request):
 def listPosts(request):
 	if request.method == "GET":
 		dataRequired = ["thread"]
-		dataPossible = ["limit","order","since","order"]
+		dataPosible = ["limit","order","since","sort"]
 		dataRequest = {}
 		try:
 			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
 		except Exception as e:
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+			return HttpResponse(dataResponse, content_type='application/json')
 		try:
 			posts = api.dbOperations.thread.listPosts(dataRequest)
 		except Exception as e:
@@ -198,6 +202,7 @@ def subscribe(request):
 		try:
 			subscribe = api.dbOperations.thread.subscribe(dataRequest)
 		except Exception as e:
+			print(e)
 			e = dict(e.message)
 			dataResponse = tools.getResponse(e["code"],e["message"])
 			return HttpResponse(dataResponse, content_type='application/json')

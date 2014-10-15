@@ -38,7 +38,6 @@ def getGetParametersDataRequest(request,dataRequired,dataPossible):
 				dataRequest[a] = []
 			else:
 				temp = temp[0]
-			print(temp)
 			dataRequest[a] = temp
 		else:
 			dataRequest[a] = []
