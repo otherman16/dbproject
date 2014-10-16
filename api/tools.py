@@ -1,4 +1,5 @@
 import json
+from django.http import HttpResponse
 
 responseTemplate = ("code","response")
 codes={"OK":0,"NOT FOUND":1,"INVALID REQUEST":2,"UNCORRECT REQUEST":3,"UNKNOWN ERROR":4,"USER EXISTS":5}
@@ -16,9 +17,13 @@ def getJsonDataRequest(request,dataRequired,dataPosible):
 		if a not in jsonRequest:
 			raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' not found in request"})
 		else:
+			if jsonRequest[a] is None:
+				raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' can't be None"})
 			dataRequest[a] = jsonRequest[a]
 	for a in dataPosible:
 		if a in jsonRequest:
+			if jsonRequest[a] is None:
+				raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' can't be None"})
 			dataRequest[a] = jsonRequest[a]
 		else:
 			dataRequest[a] = []
@@ -42,3 +47,37 @@ def getGetParametersDataRequest(request,dataRequired,dataPossible):
 		else:
 			dataRequest[a] = []
 	return dataRequest
+
+# Decorator
+def requirePost(func):
+	def wrapper(request):
+		if request.method == "POST":
+			return func(request)
+		else:
+			dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+			return HttpResponse(dataResponse, content_type='application/json')
+	return wrapper
+
+# Decorator
+def requireGet(func):
+	def wrapper(request):
+		if request.method == "GET":
+			return func(request)
+		else:
+			dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+			return HttpResponse(dataResponse, content_type='application/json')
+	return wrapper
+
+# Decorator
+def throwExceptions(func):
+	def wrapper(request):
+		try:
+			return func(request)
+		except Exception as e:
+			if type(e.message) is dict:
+				e = dict(e.message)
+				dataResponse = getResponse(e["code"],e["message"])
+			else:
+				dataResponse = getResponse("UNKNOWN ERROR",e.message)
+			return HttpResponse(dataResponse, content_type='application/json')
+	return wrapper

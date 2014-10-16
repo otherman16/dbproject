@@ -86,13 +86,13 @@ def list(data):
 		sort = data["sort"]
 	if "limit" in data and data["limit"]:
 		if sort == 'flat':
-			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
 		else:
 			if sort == 'tree':
-				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
 			else:
 				if sort == 'parent_tree':
-					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since ))
+					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
 				else:
 					raise Exception({"code":"INVALID REQUEST","message":"Invalid method of sorting '" + sort + "'"})
 	else:

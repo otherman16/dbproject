@@ -98,9 +98,9 @@ def restore(data):
 def subscribe(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	if not (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"] )))[0][0]:
-		dbConnection.execQuery("INSERT subscribe (email_subscriber,id_subscribing) VALUES (%s,%s)",(data["user"],data["thread"] ))
-		subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"],data["user"] ))
+	if not (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], )))[0][0]:
+		dbConnection.execQuery("INSERT subscribe (email_subscriber,id_subscribing) VALUES (%s,%s)",(data["user"],data["thread"], ))
+		subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"],data["user"], ))
 	else:
 		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["user"] + "' already subscribed on thread with id '" + str(data["thread"]) + "'"})
 	return OrderedDict(zip(("thread","user"),subscribe[0]))
@@ -110,7 +110,7 @@ def unsubscribe(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
 	if (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"], data["thread"], )))[0][0]:
 		subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"], data["user"], ))
-		dbConnection.execQuery("DELETE FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"] ))
+		dbConnection.execQuery("DELETE FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], ))
 	else:
 		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["user"] + "' doesn't subscribed on thread with id '" + str(data["thread"]) + "'"})
 	return OrderedDict(zip(("thread","user"),subscribe[0]))

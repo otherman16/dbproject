@@ -17,6 +17,7 @@ def create(data):
 		dbConnection.execQuery("INSERT user (username,about,name,email,isAnonymous) VALUES (%s,%s,%s,%s,%s)",(data["username"],data["about"],data["name"],data["email"], isAnonymous, ))
 		dataRequest={}
 		dataRequest["user"] = data["email"]
+		dataRequest["related"] = []
 		return details(dataRequest)
 	else:
 		raise Exception({"code":"USER EXISTS","message":"User with email '" + data["email"] + "' is already exists"})
@@ -45,12 +46,13 @@ def details(data):
 def follow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"] )):
-		dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"] ))
+	if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+		dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"], ))
 	else:
 		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' already follows user with email '" + data["followee"] + "'"})
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
+	dataRequest["related"] = []
 	return details(dataRequest)
 
 def listFollowers(data):
@@ -67,7 +69,7 @@ def listFollowers(data):
 		if "since_id" in data and data["since_id"]:
 			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s ORDER BY user.name " + order + ";",(data["user"], data["since"][0], data["since"][1], ))
 		else:
-			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name " + order + ";",(data["user"]))
+			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name " + order + ";",(data["user"], ))
 	followersEmails = sum(followersEmails,())
 	followers = []
 	dataRequest = {}
@@ -98,7 +100,7 @@ def listFollowing(data):
 	dataRequest["related"] = []
 	for followingsEmail in followingsEmails:
 		dataRequest["user"] = followingsEmail
-		posts.append(api.dbOperations.user.details(dataRequest))
+		followings.append(api.dbOperations.user.details(dataRequest))
 	return followings
 
 def listPosts(data):
@@ -111,17 +113,19 @@ def listPosts(data):
 def unfollow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"] )):
-		dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"] ))
+	if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+		dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], ))
 	else:
 		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' doesn't follow user with email '" + data["followee"] + "'"})
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
+	dataRequest["related"] = []
 	return details(dataRequest)
 
 def update(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
-	dbConnection.execQuery("UPDATE user SET about=%s,name=%s WHERE email=%s;", (data["about"],data["name"],data["user"] ))
+	dbConnection.execQuery("UPDATE user SET about=%s,name=%s WHERE email=%s;", (data["about"],data["name"],data["user"], ))
 	dataRequest={}
 	dataRequest["user"] = data["user"]
+	dataRequest["related"] = []
 	return details(dataRequest)

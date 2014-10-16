@@ -1,278 +1,146 @@
 from api import tools
+from api.tools import requireGet, requirePost, throwExceptions
 from django.http import HttpResponse
 import api.dbOperations.thread
 
+@requirePost
+@throwExceptions
 def close(request):
-	if request.method == "POST":
-		dataRequired = ["thread"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.close(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.close(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def create(request):
-	if request.method == "POST":
-		dataRequired = ["forum", "title", "isClosed", "user", "date", "message", "slug"]
-		dataPosible = ["isDeleted"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.create(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["forum", "title", "isClosed", "user", "date", "message", "slug"]
+	dataPosible = ["isDeleted"]
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.create(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def details(request):
-	if request.method == "GET":
-		dataRequired = ["thread"]
-		dataPosible = ["related"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.details(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = ["related"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.details(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def list(request):
-	if request.method == "GET":
-		dataRequired = []
-		if request.GET.get("forum"):
-			dataRequired = ["forum"]
-		if request.GET.get("user"):
-			if dataRequired:
-				dataResponse = tools.getResponse("INVALID REQUEST","There are two or more entity required")
-				return HttpResponse(dataResponse, content_type='application/json')
-			dataRequired = ["user"]
-		if not dataRequired:
-			dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
+	dataRequired = []
+	if request.GET.get("forum"):
+		dataRequired = ["forum"]
+	if request.GET.get("user"):
+		if dataRequired:
+			dataResponse = tools.getResponse("INVALID REQUEST","There are two or more entity required")
 			return HttpResponse(dataResponse, content_type='application/json')
-		dataPosible = ["since","limit","order"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			threads = api.dbOperations.thread.list(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",threads)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+		dataRequired = ["user"]
+	if not dataRequired:
+		dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
+		return HttpResponse(dataResponse, content_type='application/json')
+	dataPosible = ["since","limit","order"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	threads = api.dbOperations.thread.list(dataRequest)
+	dataResponse = tools.getResponse("OK",threads)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listPosts(request):
-	if request.method == "GET":
-		dataRequired = ["thread"]
-		dataPosible = ["limit","order","since","sort"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			posts = api.dbOperations.thread.listPosts(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",posts)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = ["limit","order","since","sort"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	posts = api.dbOperations.thread.listPosts(dataRequest)
+	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def open(request):
-	if request.method == "POST":
-		dataRequired = ["thread"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.open(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.open(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def remove(request):
-	if request.method == "POST":
-		dataRequired = ["thread"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.remove(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.remove(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def restore(request):
-	if request.method == "POST":
-		dataRequired = ["thread"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.restore(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.restore(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def subscribe(request):
-	if request.method == "POST":
-		dataRequired = ["thread","user"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			subscribe = api.dbOperations.thread.subscribe(dataRequest)
-		except Exception as e:
-			print(e)
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",subscribe)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread","user"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	subscribe = api.dbOperations.thread.subscribe(dataRequest)
+	dataResponse = tools.getResponse("OK",subscribe)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def unsubscribe(request):
-	if request.method == "POST":
-		dataRequired = ["thread","user"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			subscribe = api.dbOperations.thread.unsubscribe(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",subscribe)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread","user"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	subscribe = api.dbOperations.thread.unsubscribe(dataRequest)
+	dataResponse = tools.getResponse("OK",subscribe)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def update(request):
-	if request.method == "POST":
-		dataRequired = ["thread", "slug", "message"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.update(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread", "slug", "message"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.update(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def vote(request):
-	if request.method == "POST":
-		dataRequired = ["thread", "vote"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			thread = api.dbOperations.thread.vote(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",thread)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["thread", "vote"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	thread = api.dbOperations.thread.vote(dataRequest)
+	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')

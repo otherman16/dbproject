@@ -4,9 +4,9 @@ urlpatterns = patterns('',
 
     url(r'^$', 'api.views.index'),
     # -------------------------------------------------------------
-    url(r'^db/api/a.kobilin/clear', 'api.views.clear'),
-    url(r'^db/api/a.kobilin/createTables', 'api.views.createTables'),
-    url(r'^db/api/a.kobilin/recreateDatabase', 'api.views.recreateDatabase'),
+    url(r'^db/api/clear', 'api.views.clear'),
+    url(r'^db/api/createTables', 'api.views.createTables'),
+    url(r'^db/api/recreateDatabase', 'api.views.recreateDatabase'),
     # -------------------------------------------------------------
     # -----------------------FORUM---------------------------------
     # -------------------------------------------------------------

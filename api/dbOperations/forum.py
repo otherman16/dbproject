@@ -52,6 +52,7 @@ def listUsers(data):
 	userEmails = sum(userEmails,())
 	users = []
 	dataRequest = {}
+	dataRequest["related"] = []
 	for userEmail in userEmails:
 		dataRequest["user"] = userEmail
 		users.append(api.dbOperations.user.details(dataRequest))

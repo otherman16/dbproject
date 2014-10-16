@@ -1,51 +1,30 @@
 from django.http import HttpResponse
-import json
 from api.dbOperations import dbConnection
+from api import tools
+from tools import requireGet, requirePost, throwExceptions
 
-responseTemplate = ("code","response")
-codes={"OK":0,"NOT FOUND":1,"INVALID REQUEST":2,"UNCORRECT REQUEST":3,"UNKNOWN ERROR":4,"USER EXISTS":5}
 
-def getResponse(code,response):
-	return dict(zip(responseTemplate,(codes[code],response)))
-
+@requireGet
 def index(request):
 	return HttpResponse("Hello")
 
+@requirePost
+@throwExceptions
 def clear(request):
-	if request.method == "POST":
-		try:
-			dbConnection.clear()
-		except Exception as e:
-			dataResponse = getResponse("UNKNOWN ERROR",str(e))
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		dataResponse = getResponse("OK","OK")
-		return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-	else:
-		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
-	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+	dbConnection.clear()
+	dataResponse = tools.getResponse("OK","OK")
+	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def createTables(request):
-	if request.method == "POST":
-		try:
-			dbConnection.createTables()
-		except Exception as e:
-			dataResponse = getResponse("UNKNOWN ERROR",str(e))
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		dataResponse = getResponse("OK","OK")
-		return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-	else:
-		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
-	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+	dbConnection.createTables()
+	dataResponse = tools.getResponse("OK","OK")
+	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def recreateDatabase(request):
-	if request.method == "POST":
-		try:
-			dbConnection.recreateDatabase()
-		except Exception as e:
-			dataResponse = getResponse("UNKNOWN ERROR",str(e))
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		dataResponse = getResponse("OK","OK")
-		return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-	else:
-		dataResponse = getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
-	return HttpResponse(json.dumps(dataResponse), content_type='application/json')
+	dbConnection.recreateDatabase()
+	dataResponse = tools.getResponse("OK","OK")
+	return HttpResponse(dataResponse, content_type='application/json')

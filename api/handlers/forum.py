@@ -1,112 +1,59 @@
 from api import tools
+from api.tools import requireGet, requirePost, throwExceptions
 from django.http import HttpResponse
 import api.dbOperations.forum
 
+@requirePost
+@throwExceptions
 def create(request):
-	if request.method == "POST":
-		dataRequired = ["name", "short_name", "user"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			forum = api.dbOperations.forum.create(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",forum)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["name", "short_name", "user"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	forum = api.dbOperations.forum.create(dataRequest)
+	dataResponse = tools.getResponse("OK",forum)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def details(request):
-	if request.method == "GET":
-		dataRequired = ["forum"]
-		dataPosible = ["related"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			forum = api.dbOperations.forum.details(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",forum)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["forum"]
+	dataPosible = ["related"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	forum = api.dbOperations.forum.details(dataRequest)
+	dataResponse = tools.getResponse("OK",forum)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listPosts(request):
-	if request.method == "GET":
-		dataRequired = ["forum"]
-		dataPosible = ["since","limit","sort","order","related"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			posts = api.dbOperations.forum.listPosts(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",posts)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["forum"]
+	dataPosible = ["since","limit","sort","order","related"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	posts = api.dbOperations.forum.listPosts(dataRequest)
+	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listThreads(request):
-	if request.method == "GET":
-		dataRequired = ["forum"]
-		dataPosible = ["since","limit","order","related"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			threads = api.dbOperations.forum.listThreads(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",threads)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["forum"]
+	dataPosible = ["since","limit","order","related"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	threads = api.dbOperations.forum.listThreads(dataRequest)
+	dataResponse = tools.getResponse("OK",threads)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listUsers(request):
-	if request.method == "GET":
-		dataRequired = ["forum"]
-		dataPosible = ["since","limit","order"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			users = api.dbOperations.forum.listUsers(dataRequest)
-		except Exception as e:
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",users)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["forum"]
+	dataPosible = ["since","limit","order"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	users = api.dbOperations.forum.listUsers(dataRequest)
+	dataResponse = tools.getResponse("OK",users)
 	return HttpResponse(dataResponse, content_type='application/json')

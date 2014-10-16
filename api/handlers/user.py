@@ -1,182 +1,93 @@
 from api import tools
+from api.tools import requireGet, requirePost, throwExceptions
 from django.http import HttpResponse
 import api.dbOperations.user
 
+
+@requirePost
+@throwExceptions
 def create(request):
-	if request.method == "POST":
-		dataRequired = ["username", "about", "name", "email"]
-		dataPosible = ["isAnonymous"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			user = api.dbOperations.user.create(dataRequest)
-		except Exception as e:
-			print(e)
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",user)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["username", "about", "name", "email"]
+	dataPosible = ["isAnonymous"]
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	user = api.dbOperations.user.create(dataRequest)
+	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def details(request):
-	if request.method == "GET":
-		dataRequired = ["user"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			user = api.dbOperations.user.details(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",user)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["user"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	user = api.dbOperations.user.details(dataRequest)
+	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def follow(request):
-	if request.method == "POST":
-		dataRequired = ["follower", "followee"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			user = api.dbOperations.user.follow(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",user)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["follower", "followee"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	user = api.dbOperations.user.follow(dataRequest)
+	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listFollowers(request):
-	if request.method == "GET":
-		dataRequired = ["user"]
-		dataPosible = ["limit","order","since_id"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			followers = api.dbOperations.user.listFollowers(dataRequest)
-		except Exception as e:
-			print(e)
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",followers)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["user"]
+	dataPosible = ["limit","order","since_id"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	followers = api.dbOperations.user.listFollowers(dataRequest)
+	dataResponse = tools.getResponse("OK",followers)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listFollowing(request):
-	if request.method == "GET":
-		dataRequired = ["user"]
-		dataPosible = ["limit","order","since_id"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			following = api.dbOperations.user.listFollowing(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",following)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["user"]
+	dataPosible = ["limit","order","since_id"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	following = api.dbOperations.user.listFollowing(dataRequest)
+	dataResponse = tools.getResponse("OK",following)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requireGet
+@throwExceptions
 def listPosts(request):
-	if request.method == "GET":
-		dataRequired = ["user"]
-		dataPosible = ["limit","order","since"]
-		dataRequest = {}
-		try:
-			dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(json.dumps(dataResponse), content_type='application/json')
-		try:
-			posts = api.dbOperations.user.listPosts(dataRequest)
-		except Exception as e:
-			print(e)
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",posts)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["user"]
+	dataPosible = ["limit","order","since"]
+	dataRequest = {}
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	posts = api.dbOperations.user.listPosts(dataRequest)
+	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def unfollow(request):
-	if request.method == "POST":
-		dataRequired = ["follower", "followee"]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			user = api.dbOperations.user.unfollow(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",user)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["follower", "followee"]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	user = api.dbOperations.user.unfollow(dataRequest)
+	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
 
+@requirePost
+@throwExceptions
 def updateProfile(request):
-	if request.method == "POST":
-		dataRequired = ["about", "user", "name",]
-		dataPosible = []
-		dataRequest = {}
-		try:
-			dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		try:
-			user = api.dbOperations.user.update(dataRequest)
-		except Exception as e:
-			e = dict(e.message)
-			dataResponse = tools.getResponse(e["code"],e["message"])
-			return HttpResponse(dataResponse, content_type='application/json')
-		dataResponse = tools.getResponse("OK",user)
-	else:
-		dataResponse = tools.getResponse("INVALID REQUEST","Request method = '" + request.method + "'")
+	dataRequired = ["about", "user", "name",]
+	dataPosible = []
+	dataRequest = {}
+	dataRequest = tools.getJsonDataRequest(request,dataRequired,dataPosible)
+	user = api.dbOperations.user.update(dataRequest)
+	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
