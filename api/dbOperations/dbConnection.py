@@ -64,10 +64,10 @@ def createTables():
 	execQuery("CREATE TABLE IF NOT EXISTS user(" +
 		"id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT, " +
 		"email VARCHAR(50) NOT NULL, " +
-		"name VARCHAR(50) NOT NULL, " +
-		"username VARCHAR(50) NOT NULL, " +
-		"about VARCHAR(50) NOT NULL, " +
-		"isAnonymous  BOOLEAN NOT NULL DEFAULT false, " +
+		"name VARCHAR(500), " +
+		"username VARCHAR(50), " +
+		"about VARCHAR(10000), " +
+		"isAnonymous BOOLEAN NOT NULL DEFAULT false, " +
 		"PRIMARY KEY (email), " +
 		"UNIQUE KEY (id));",())
 	execQuery("CREATE TABLE IF NOT EXISTS forum(" + 
@@ -83,7 +83,7 @@ def createTables():
 		"id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT, " +
 		"title VARCHAR(100) NOT NULL, " +
 		"slug VARCHAR(100) NOT NULL, " +
-		"message VARCHAR(300) NOT NULL, " +
+		"message VARCHAR(10000) NOT NULL, " +
 		"user VARCHAR(50) NOT NULL, " +
 		"forum VARCHAR(150) NOT NULL, " +
 		"date DATETIME NOT NULL DEFAULT '2014-01-01 00:00:00', " +
@@ -98,7 +98,7 @@ def createTables():
 		"FOREIGN KEY (forum) REFERENCES forum (short_name) ON UPDATE CASCADE ON DELETE CASCADE);",())
 	execQuery("CREATE TABLE IF NOT EXISTS post(" +
 		"id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT, " +
-		"message VARCHAR(300) NOT NULL, " +
+		"message VARCHAR(10000) NOT NULL, " +
 		"forum VARCHAR(100) NOT NULL, " +
 		"thread BIGINT(20) UNSIGNED NOT NULL, " +
 		"user VARCHAR(50) NOT NULL, " +

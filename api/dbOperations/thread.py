@@ -4,7 +4,7 @@ import api.dbOperations.forum
 import api.dbOperations.post
 from collections import OrderedDict, defaultdict
 
-fields = ("date", "dislikes", "forum", "id", "isClosed", "isDeleted", "likes", "message", "points", "posts", "slug", "user")
+fields = ("date", "dislikes", "forum", "id", "isClosed", "isDeleted", "likes", "message", "points", "posts", "slug", "title", "user")
 
 def close(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
@@ -26,15 +26,17 @@ def create(data):
 
 def details(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	thread = dbConnection.execQuery("SELECT date,dislikes,forum,id,isClosed,isDeleted,likes,message,points,posts,slug,user FROM thread WHERE id=%s",(data["thread"], ))
+	thread = dbConnection.execQuery("SELECT date,dislikes,forum,id,isClosed,isDeleted,likes,message,points,posts,slug,title,user FROM thread WHERE id=%s",(data["thread"], ))
 	thread = OrderedDict(zip(fields,thread[0]))
 	if "user" in data["related"]:
 		dataRequest = {}
 		dataRequest["user"] = thread["user"]
+		dataRequest["related"] = []
 		thread["user"] = api.dbOperations.user.details(dataRequest)
 	if "forum" in data["related"]:
 		dataRequest = {}
 		dataRequest["forum"] = thread["forum"]
+		dataRequest["related"] = []
 		thread["forum"] = api.dbOperations.forum.details(dataRequest)
 	thread["date"] = thread["date"].strftime("%Y-%m-%d %H:%M:%S")
 	return dbConnection.fieldsToBoolean(thread)

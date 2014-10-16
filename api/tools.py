@@ -17,13 +17,9 @@ def getJsonDataRequest(request,dataRequired,dataPosible):
 		if a not in jsonRequest:
 			raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' not found in request"})
 		else:
-			if jsonRequest[a] is None:
-				raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' can't be None"})
 			dataRequest[a] = jsonRequest[a]
 	for a in dataPosible:
 		if a in jsonRequest:
-			if jsonRequest[a] is None:
-				raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' can't be None"})
 			dataRequest[a] = jsonRequest[a]
 		else:
 			dataRequest[a] = []
