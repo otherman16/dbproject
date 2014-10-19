@@ -19,8 +19,9 @@ def create(request):
 def details(request):
 	dataRequired = ["forum"]
 	dataPosible = ["related"]
+	dataRelated = ["user"]
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	forum = api.dbOperations.forum.details(dataRequest)
 	dataResponse = tools.getResponse("OK",forum)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -30,8 +31,9 @@ def details(request):
 def listPosts(request):
 	dataRequired = ["forum"]
 	dataPosible = ["since","limit","sort","order","related"]
+	dataRelated = ["forum","user","thread"]
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	posts = api.dbOperations.forum.listPosts(dataRequest)
 	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -41,8 +43,9 @@ def listPosts(request):
 def listThreads(request):
 	dataRequired = ["forum"]
 	dataPosible = ["since","limit","order","related"]
+	dataRelated = ["user","forum"]
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	threads = api.dbOperations.forum.listThreads(dataRequest)
 	dataResponse = tools.getResponse("OK",threads)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -51,9 +54,10 @@ def listThreads(request):
 @throwExceptions
 def listUsers(request):
 	dataRequired = ["forum"]
-	dataPosible = ["since","limit","order"]
+	dataPosible = ["since_id","limit","order"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	users = api.dbOperations.forum.listUsers(dataRequest)
 	dataResponse = tools.getResponse("OK",users)
 	return HttpResponse(dataResponse, content_type='application/json')

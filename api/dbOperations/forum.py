@@ -36,24 +36,30 @@ def listThreads(data):
 
 def listUsers(data):
 	dbConnection.exists(entity="forum", identificator="short_name", value=data["forum"])
-	order = 'DESC'
+	query = "SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s"
+	params = (data["forum"],)
+	if "since_id" in data and data["since_id"]:
+		if type(data["since_id"]) == list:
+			query += " AND user.id>=" + data["since_id"][0] + " AND user.id<=" + data["since_id"][1]
+		else:
+			if type(data["since_id"]) == unicode:
+				query += " AND user.id>=" + data["since_id"]
+			else:
+				raise Exception({"code":"UNCORRECT REQUEST","message":"since_id can't contains more than 2 elements"})
+	query += " GROUP BY email"
 	if "order" in data and data["order"]:
-		order = data["order"]
-	if "limit" in data and data["limit"]:
-		if "since" in data and data["since"]:
-			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["forum"], data["since"][0], data["since"][1], ))
-		else:
-			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["forum"], ))
+		query += " ORDER BY user.name " + data["order"]
 	else:
-		if "since" in data and data["since"]:
-			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s AND user.id>=%s AND user.id<=%s ORDER BY user.name " + order + ";",(data["forum"], data["since"][0], data["since"][1], ))
-		else:
-			userEmails = dbConnection.execQuery("SELECT email FROM post JOIN user ON post.user=user.email WHERE forum=%s ORDER BY user.name " + order + ";",(data["forum"], ))
-	userEmails = sum(userEmails,())
+		query += " ORDER BY user.name DESC"
+	if "limit" in data and data["limit"]:
+		query += " LIMIT " + data["limit"]
+	userEmails = dbConnection.execQuery(query,params)
 	users = []
-	dataRequest = {}
-	dataRequest["related"] = []
-	for userEmail in userEmails:
-		dataRequest["user"] = userEmail
-		users.append(api.dbOperations.user.details(dataRequest))
+	if userEmails:
+		userEmails = sum(userEmails,())
+		dataRequest = {}
+		dataRequest["related"] = []
+		for userEmail in userEmails:
+			dataRequest["user"] = userEmail
+			users.append(api.dbOperations.user.details(dataRequest))
 	return users

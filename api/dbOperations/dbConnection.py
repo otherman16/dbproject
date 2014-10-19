@@ -42,6 +42,7 @@ def clear():
 	execQuery("DELETE FROM thread",())
 	execQuery("DELETE FROM forum",())
 	execQuery("DELETE FROM user",())
+	execQuery("DELETE FROM subscribe",())
 
 def recreateDatabase():
 	connection = MySQLdb.connect('localhost','root','1')
@@ -66,7 +67,7 @@ def createTables():
 		"email VARCHAR(50) NOT NULL, " +
 		"name VARCHAR(500), " +
 		"username VARCHAR(50), " +
-		"about VARCHAR(10000), " +
+		"about VARCHAR(20000), " +
 		"isAnonymous BOOLEAN NOT NULL DEFAULT false, " +
 		"PRIMARY KEY (email), " +
 		"UNIQUE KEY (id));",())
@@ -83,7 +84,7 @@ def createTables():
 		"id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT, " +
 		"title VARCHAR(100) NOT NULL, " +
 		"slug VARCHAR(100) NOT NULL, " +
-		"message VARCHAR(10000) NOT NULL, " +
+		"message VARCHAR(20000) NOT NULL, " +
 		"user VARCHAR(50) NOT NULL, " +
 		"forum VARCHAR(150) NOT NULL, " +
 		"date DATETIME NOT NULL DEFAULT '2014-01-01 00:00:00', " +
@@ -98,7 +99,7 @@ def createTables():
 		"FOREIGN KEY (forum) REFERENCES forum (short_name) ON UPDATE CASCADE ON DELETE CASCADE);",())
 	execQuery("CREATE TABLE IF NOT EXISTS post(" +
 		"id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT, " +
-		"message VARCHAR(10000) NOT NULL, " +
+		"message VARCHAR(20000) NOT NULL, " +
 		"forum VARCHAR(100) NOT NULL, " +
 		"thread BIGINT(20) UNSIGNED NOT NULL, " +
 		"user VARCHAR(50) NOT NULL, " +
@@ -127,7 +128,7 @@ def createTables():
 		"FOREIGN KEY (email_following) REFERENCES user (email) ON UPDATE CASCADE ON DELETE CASCADE);",())
 
 	execQuery("CREATE TABLE IF NOT EXISTS subscribe(" +
-		"email_subscriber VARCHAR(20) NOT NULL, " +
+		"email_subscriber VARCHAR(50) NOT NULL, " +
 		"id_subscribing BIGINT(20) UNSIGNED NOT NULL, " +
 		"UNIQUE KEY (email_subscriber,id_subscribing), " +
 		"FOREIGN KEY (email_subscriber) REFERENCES user (email) ON UPDATE CASCADE ON DELETE CASCADE, " +

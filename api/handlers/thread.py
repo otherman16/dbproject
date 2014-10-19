@@ -30,8 +30,9 @@ def create(request):
 def details(request):
 	dataRequired = ["thread"]
 	dataPosible = ["related"]
+	dataRelated = ["user","forum"]
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	thread = api.dbOperations.thread.details(dataRequest)
 	dataResponse = tools.getResponse("OK",thread)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -51,8 +52,9 @@ def list(request):
 		dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
 		return HttpResponse(dataResponse, content_type='application/json')
 	dataPosible = ["since","limit","order"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	threads = api.dbOperations.thread.list(dataRequest)
 	dataResponse = tools.getResponse("OK",threads)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -62,8 +64,9 @@ def list(request):
 def listPosts(request):
 	dataRequired = ["thread"]
 	dataPosible = ["limit","order","since","sort"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	posts = api.dbOperations.thread.listPosts(dataRequest)
 	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')

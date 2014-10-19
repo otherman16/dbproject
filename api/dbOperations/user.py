@@ -46,10 +46,10 @@ def details(data):
 def follow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
-		dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"], ))
-	else:
-		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' already follows user with email '" + data["followee"] + "'"})
+	# if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+	dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"], ))
+	# else:
+	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' already follows user with email '" + data["followee"] + "'"})
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
 	dataRequest["related"] = []
@@ -57,50 +57,60 @@ def follow(data):
 
 def listFollowers(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
-	order = "DESC"
+	query = "SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s"
+	params = (data["user"],)
+	if "since_id" in data and data["since_id"]:
+		if type(data["since_id"]) == list:
+			query += " AND user.id>=" + data["since_id"][0] + " AND user.id<=" + data["since_id"][1]
+		else:
+			if type(data["since_id"]) == unicode:
+				query += " AND user.id>=" + data["since_id"]
+			else:
+				raise Exception({"code":"UNCORRECT REQUEST","message":"since_id can't contains more than 2 elements"})
 	if "order" in data and data["order"]:
-		order = data["order"]
-	if "limit" in data and data["limit"]:
-		if "since_id" in data and data["since_id"]:
-			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["user"], data["since"][0], data["since"][1], ))
-		else:
-			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["user"], ))
+		query += " ORDER BY user.name " + data["order"]
 	else:
-		if "since_id" in data and data["since_id"]:
-			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s AND user.id>%s AND user.id<%s ORDER BY user.name " + order + ";",(data["user"], data["since"][0], data["since"][1], ))
-		else:
-			followersEmails = dbConnection.execQuery("SELECT email_follower FROM follow JOIN user ON follow.email_follower=user.email WHERE email_following=%s ORDER BY user.name " + order + ";",(data["user"], ))
-	followersEmails = sum(followersEmails,())
+		query += " ORDER BY user.name DESC"
+	if "limit" in data and data["limit"]:
+		query += " LIMIT " + data["limit"]
+	followersEmails = dbConnection.execQuery(query,params)
 	followers = []
-	dataRequest = {}
-	dataRequest["related"] = []
-	for followersEmail in followersEmails:
-		dataRequest["user"] = followersEmail
-		followers.append(api.dbOperations.user.details(dataRequest))
+	if followersEmails:
+		followersEmails = sum(followersEmails,())
+		dataRequest = {}
+		dataRequest["related"] = []
+		for followersEmail in followersEmails:
+			dataRequest["user"] = followersEmail
+			followers.append(api.dbOperations.user.details(dataRequest))
 	return followers
 
 def listFollowing(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
-	order = 'DESC'
+	query = "SELECT email_following FROM follow JOIN user ON follow.email_following=user.email WHERE email_follower=%s"
+	params = (data["user"],)
+	if "since_id" in data and data["since_id"]:
+		if type(data["since_id"]) == list:
+			query += " AND user.id>=" + data["since_id"][0] + " AND user.id<=" + data["since_id"][1]
+		else:
+			if type(data["since_id"]) == unicode:
+				query += " AND user.id>=" + data["since_id"]
+			else:
+				raise Exception({"code":"UNCORRECT REQUEST","message":"since_id can't contains more than 2 elements"})
 	if "order" in data and data["order"]:
-		order = data["order"]
-	if "limit" in data and data["limit"]:
-		if "since_id" in data and data["since_id"]:
-			followingsEmails = dbConnection.execQuery("SELECT email_following FROM follow JOIN user ON follow.email_following=user.email WHERE email_follower=%s AND user.id>%s AND user.id<%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["user"], data["since"][0], data["since"][1], ))
-		else:
-			followingsEmails = dbConnection.execQuery("SELECT email_following FROM follow JOIN user ON follow.email_following=user.email WHERE email_follower=%s ORDER BY user.name " + order + " LIMIT " + data["limit"] + ";",(data["user"], ))
+		query += " ORDER BY user.name " + data["order"]
 	else:
-		if "since_id" in data and data["since_id"]:
-			followingsEmails = dbConnection.execQuery("SELECT email_following FROM follow JOIN user ON follow.email_following=user.email WHERE email_follower=%s AND user.id>%s AND user.id<%s ORDER BY user.name " + order + ";",(data["user"], data["since"][0], data["since"][1], ))
-		else:
-			followingsEmails = dbConnection.execQuery("SELECT email_following FROM follow JOIN user ON follow.email_following=user.email WHERE email_follower=%s ORDER BY user.name " + order + ";",(data["user"], ))
-	followingsEmails = sum(followingsEmails,())
+		query += " ORDER BY user.name DESC"
+	if "limit" in data and data["limit"]:
+		query += " LIMIT " + data["limit"]
+	followingsEmails = dbConnection.execQuery(query,params)
 	followings = []
-	dataRequest = {}
-	dataRequest["related"] = []
-	for followingsEmail in followingsEmails:
-		dataRequest["user"] = followingsEmail
-		followings.append(api.dbOperations.user.details(dataRequest))
+	if followingsEmails:
+		followingsEmails = sum(followingsEmails,())
+		dataRequest = {}
+		dataRequest["related"] = []
+		for followingsEmail in followingsEmails:
+			dataRequest["user"] = followingsEmail
+			followings.append(api.dbOperations.user.details(dataRequest))
 	return followings
 
 def listPosts(data):
@@ -113,10 +123,10 @@ def listPosts(data):
 def unfollow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
-		dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], ))
-	else:
-		raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' doesn't follow user with email '" + data["followee"] + "'"})
+	# if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+	dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], ))
+	# else:
+	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' doesn't follow user with email '" + data["followee"] + "'"})
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
 	dataRequest["related"] = []

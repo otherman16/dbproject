@@ -18,24 +18,44 @@ def getJsonDataRequest(request,dataRequired,dataPosible):
 			raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' not found in request"})
 		else:
 			dataRequest[a] = jsonRequest[a]
+			try:
+				dataRequest[a] = dataRequest[a].encode('utf-8')
+			except:
+				pass
 	for a in dataPosible:
 		if a in jsonRequest:
 			dataRequest[a] = jsonRequest[a]
+			try:
+				dataRequest[a] = dataRequest[a].encode('utf-8')
+			except:
+				pass
 		else:
 			dataRequest[a] = []
 	return dataRequest
 
-def getGetParametersDataRequest(request,dataRequired,dataPossible):
+def getGetParametersDataRequest(request,dataRequired,dataPossible,dataRelated):
 	dataRequest = {}
 	for a in dataRequired:
 		if not request.GET.get(a):
 			raise Exception({"code":"INVALID REQUEST","message":"Element '" + a + "' not found in request"})
 		else:
 			dataRequest[a] = request.GET.get(a)
+			try:
+				dataRequest[a] = dataRequest[a].encode('utf-8')
+			except:
+				pass
 	for a in dataPossible:
 		if request.GET.getlist(a):
 			temp = request.GET.getlist(a)
+			try:
+				temp = temp.encode('utf-8')
+			except:
+				pass
 			if len(temp) > 1:
+				if a == "related":
+					for r in temp:
+						if r not in dataRelated:
+							raise Exception({"code":"UNCORRECT REQUEST","message":"Related can't contains element " + r + "'"})
 				dataRequest[a] = []
 			else:
 				temp = temp[0]

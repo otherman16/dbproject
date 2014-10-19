@@ -20,8 +20,9 @@ def create(request):
 def details(request):
 	dataRequired = ["user"]
 	dataPosible = []
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	user = api.dbOperations.user.details(dataRequest)
 	dataResponse = tools.getResponse("OK",user)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -42,8 +43,9 @@ def follow(request):
 def listFollowers(request):
 	dataRequired = ["user"]
 	dataPosible = ["limit","order","since_id"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	followers = api.dbOperations.user.listFollowers(dataRequest)
 	dataResponse = tools.getResponse("OK",followers)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -53,8 +55,9 @@ def listFollowers(request):
 def listFollowing(request):
 	dataRequired = ["user"]
 	dataPosible = ["limit","order","since_id"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	following = api.dbOperations.user.listFollowing(dataRequest)
 	dataResponse = tools.getResponse("OK",following)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -64,8 +67,9 @@ def listFollowing(request):
 def listPosts(request):
 	dataRequired = ["user"]
 	dataPosible = ["limit","order","since"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	posts = api.dbOperations.user.listPosts(dataRequest)
 	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')

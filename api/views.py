@@ -11,6 +11,8 @@ def index(request):
 @requirePost
 @throwExceptions
 def clear(request):
+	dbConnection.recreateDatabase()
+	dbConnection.createTables()
 	dbConnection.clear()
 	dataResponse = tools.getResponse("OK","OK")
 	return HttpResponse(dataResponse, content_type='application/json')

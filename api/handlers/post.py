@@ -19,8 +19,9 @@ def create(request):
 def details(request):
 	dataRequired = ["post"]
 	dataPosible = ["related"]
+	dataRelated = ["forum","user","thread"]
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	post = api.dbOperations.post.details(dataRequest)
 	dataResponse = tools.getResponse("OK",post)
 	return HttpResponse(dataResponse, content_type='application/json')
@@ -45,8 +46,9 @@ def list(request):
 		dataResponse = tools.getResponse("INVALID REQUEST","There aren't any entity required")
 		return HttpResponse(dataResponse, content_type='application/json')
 	dataPosible = ["since","limit","sort","order"]
+	dataRelated = []
 	dataRequest = {}
-	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible)
+	dataRequest = tools.getGetParametersDataRequest(request,dataRequired,dataPosible,dataRelated)
 	posts = api.dbOperations.post.list(dataRequest)
 	dataResponse = tools.getResponse("OK",posts)
 	return HttpResponse(dataResponse, content_type='application/json')

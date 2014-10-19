@@ -74,66 +74,66 @@ def list(data):
 	if "user" in data:
 		dbConnection.exists(entity="user", identificator="email", value=data["user"])
 		entity = "user"
-	entityVal = data[entity]
-	since = '2014-01-01 00:00:00'
-	order = 'DESC'
-	sort = 'flat'
+
+	query = "SELECT id FROM post WHERE " + entity + "=%s"
+	params = (data[entity],)
 	if "since" in data and data["since"]:
-		since = data["since"]
-	if "order" in data and data["order"]:
-		order = data["order"]
+		query += " AND date>=%s"
+		params += (data["since"], )
 	if "sort" in data and data["sort"]:
-		sort = data["sort"]
-	if "limit" in data and data["limit"]:
-		if sort == 'flat':
-			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
+		if sort == "flat":
+			query += " ORDER BY date"
 		else:
-			if sort == 'tree':
-				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
+			if sort == "tree":
+				query += " ORDER BY path"
 			else:
-				if sort == 'parent_tree':
-					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + " LIMIT " + data["limit"] + ";",(entityVal, since, ))
+				if sort == "parent_tree":
+					query += " ORDER BY path"
 				else:
 					raise Exception({"code":"INVALID REQUEST","message":"Invalid method of sorting '" + sort + "'"})
 	else:
-		if sort == 'flat':
-			postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY date " + order + ";",(entityVal, since, ))
-		else:
-			if sort == 'tree':
-				postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s ORDER BY path " + order + ";",(entityVal, since, ))
-			else:
-				if sort == 'parent_tree':
-					postIds = dbConnection.execQuery("SELECT id FROM post WHERE " + entity + "=%s AND date>%s AND path LIKE '_' ORDER BY path " + order + ";",(entityVal, since, ))
-				else:
-					raise Exception({"code":"INVALID REQUEST","message":"Invalid method of sorting '" + sort + "'"})
-	postIds = sum(postIds,())
+		query += " ORDER BY date"
+	if "order" in data and data["order"]:
+		query += " " + data["order"]
+	else:
+		query += " DESC"
+	if "limit" in data and data["limit"]:
+		query += " LIMIT " + data["limit"]
+	postIds = dbConnection.execQuery(query,params)
 	posts = []
-	dataRequest = {}
-	dataRequest["related"] = []
-	for postId in postIds:
-		dataRequest["post"] = postId
-		posts.append(api.dbOperations.post.details(dataRequest))
+	if postIds:
+		postIds = sum(postIds,())
+		dataRequest = {}
+		if "related" in data:
+			dataRequest["related"] = data["related"]
+		else:
+			dataRequest["related"] = []
+		for postId in postIds:
+			dataRequest["post"] = postId
+			posts.append(api.dbOperations.post.details(dataRequest))
 	return posts
 
 def remove(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
-		raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s' is already deleted" % data["post"]})
+	# if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+	# 	raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s' is already deleted" % data["post"]})
 	dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id = %s;", (data["post"], ))
 	dbConnection.execQuery("UPDATE thread SET posts = posts - 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
 	return OrderedDict(zip(("post",),(data["post"],)))
 
 def restore(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
-		raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s;' doesn't deleted" % data["post"]})
+	# if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+	# 	raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s;' doesn't deleted" % data["post"]})
 	dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id = %s;", (data["post"], ))
 	dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
 	return OrderedDict(zip(("post",),(data["post"],)))
 
 def update(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	dbConnection.execQuery("UPDATE post SET message = %s, isEdited = %s WHERE id = %s;",(data["message"], "true", data["post"], ))
+	message = dbConnection.execQuery("SELECT message FROM post WHERE id=%s;", (data["post"], ))[0][0]
+	if message != data["message"]:
+		dbConnection.execQuery("UPDATE post SET message = %s, isEdited = True WHERE id = %s;",(data["message"], data["post"], ))
 	dataRequest = {}
 	dataRequest["post"] = data["post"]
 	dataRequest["related"] = []
