@@ -46,10 +46,8 @@ def details(data):
 def follow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	# if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
-	dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"], ))
-	# else:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' already follows user with email '" + data["followee"] + "'"})
+	if not dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+		dbConnection.execQuery("INSERT follow (email_follower,email_following) VALUES (%s,%s)",(data["follower"],data["followee"], ))
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
 	dataRequest["related"] = []
@@ -123,10 +121,8 @@ def listPosts(data):
 def unfollow(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["follower"])
 	dbConnection.exists(entity="user", identificator="email", value=data["followee"])
-	# if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
-	dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], ))
-	# else:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["follower"] + "' doesn't follow user with email '" + data["followee"] + "'"})
+	if dbConnection.execQuery("SELECT * FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], )):
+		dbConnection.execQuery("DELETE FROM follow WHERE email_follower = %s AND email_following = %s;",(data["follower"],data["followee"], ))
 	dataRequest={}
 	dataRequest["user"] = data["follower"]
 	dataRequest["related"] = []

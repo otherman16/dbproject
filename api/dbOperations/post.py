@@ -115,19 +115,17 @@ def list(data):
 
 def remove(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	# if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s' is already deleted" % data["post"]})
-	dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id = %s;", (data["post"], ))
-	dbConnection.execQuery("UPDATE thread SET posts = posts - 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
-	return OrderedDict(zip(("post",),(data["post"],)))
+	if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+		dbConnection.execQuery("UPDATE post SET isDeleted=true WHERE id = %s;", (data["post"], ))
+		dbConnection.execQuery("UPDATE thread SET posts = posts - 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
+		return OrderedDict(zip(("post",),(data["post"],)))
 
 def restore(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])
-	# if not dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"Post with id '%s;' doesn't deleted" % data["post"]})
-	dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id = %s;", (data["post"], ))
-	dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
-	return OrderedDict(zip(("post",),(data["post"],)))
+	if dbConnection.execQuery("SELECT isDeleted FROM post WHERE id = %s;", (data["post"], ))[0][0]:
+		dbConnection.execQuery("UPDATE post SET isDeleted=false WHERE id = %s;", (data["post"], ))
+		dbConnection.execQuery("UPDATE thread SET posts = posts + 1 WHERE id = (SELECT thread FROM post WHERE id = %s);", (data["post"], ))
+		return OrderedDict(zip(("post",),(data["post"],)))
 
 def update(data):
 	dbConnection.exists(entity="post", identificator="id", value=data["post"])

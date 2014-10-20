@@ -8,8 +8,6 @@ fields = ("date", "dislikes", "forum", "id", "isClosed", "isDeleted", "likes", "
 
 def close(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	if dbConnection.execQuery("SELECT isClosed FROM thread WHERE id = %s;", (data["thread"], ))[0][0]:
-		raise Exception({"code":"INVALID REQUEST","message":"Thread with id '%s' is already closed" % data["thread"]})
 	dbConnection.execQuery("UPDATE thread SET isClosed=true WHERE id = %s;", (data["thread"], ))
 	return OrderedDict(zip(("thread",),(data["thread"],)))
 
@@ -83,53 +81,43 @@ def listPosts(data):
 
 def open(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	# if not dbConnection.execQuery("SELECT isClosed FROM thread WHERE id = %s;", (data["thread"], ))[0][0]:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"Thread with id '%s' is opened" % data["thread"]})
 	dbConnection.execQuery("UPDATE thread SET isClosed=False WHERE id = %s;", (data["thread"], ))
 	return OrderedDict(zip(("thread",),(data["thread"],)))
 
 def remove(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	# if dbConnection.execQuery("SELECT isDeleted FROM thread WHERE id = %s;", (data["thread"], ))[0][0]:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"Thread with id '%s' is already deleted" % data["thread"]})
 	dbConnection.execQuery("UPDATE thread SET isDeleted=True WHERE id = %s;", (data["thread"], ))
-	# postsIds = dbConnection.execQuery("SELECT id FROM post WHERE thread = %s;", (data["thread"], ))
-	# dataRequest={}
-	# for postId in postsIds:
-	# 	dataRequest["post"] = postId
-	# 	api.dbOperations.post.remove(dataRequest)
+	postsIds = dbConnection.execQuery("SELECT id FROM post WHERE thread = %s;", (data["thread"], ))
+	dataRequest={}
+	for postId in postsIds:
+		dataRequest["post"] = postId
+		dbConnection.execQuery("UPDATE post SET isDeleted = True WHERE id = %s",(dataRequest["post"], ))
 	return OrderedDict(zip(("thread",),(data["thread"],)))
 
 def restore(data):
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	# if not dbConnection.execQuery("SELECT isDeleted FROM thread WHERE id = %s;", (data["thread"], ))[0][0]:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"Thread with id '%s' doesn't deleted" % data["thread"]})
 	dbConnection.execQuery("UPDATE thread SET isDeleted=False WHERE id = %s;", (data["thread"], ))
-	# postsIds = dbConnection.execQuery("SELECT id FROM post WHERE thread = %s;", (data["thread"], ))
-	# dataRequest={}
-	# for postId in postsIds:
-	# 	dataRequest["post"] = postId
-	# 	api.dbOperations.post.restore(dataRequest)
+	postsIds = dbConnection.execQuery("SELECT id FROM post WHERE thread = %s;", (data["thread"], ))
+	dataRequest={}
+	for postId in postsIds:
+		dataRequest["post"] = postId
+		dbConnection.execQuery("UPDATE post SET isDeleted = False WHERE id = %s",(dataRequest["post"], ))
 	return OrderedDict(zip(("thread",),(data["thread"],)))
 
 def subscribe(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	# if not (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], )))[0][0]:
-	dbConnection.execQuery("INSERT subscribe (email_subscriber,id_subscribing) VALUES (%s,%s)",(data["user"],data["thread"], ))
-	subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"],data["user"], ))
-	# else:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["user"] + "' already subscribed on thread with id '" + str(data["thread"]) + "'"})
+	if not (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], )))[0][0]:
+		dbConnection.execQuery("INSERT subscribe (email_subscriber,id_subscribing) VALUES (%s,%s)",(data["user"],data["thread"], ))
+		subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"],data["user"], ))
 	return OrderedDict(zip(("thread","user"),subscribe[0]))
 
 def unsubscribe(data):
 	dbConnection.exists(entity="user", identificator="email", value=data["user"])
 	dbConnection.exists(entity="thread", identificator="id", value=data["thread"])
-	# if (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"], data["thread"], )))[0][0]:
-	subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"], data["user"], ))
-	dbConnection.execQuery("DELETE FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], ))
-	# else:
-	# 	raise Exception({"code":"INVALID REQUEST","message":"User with email '" + data["user"] + "' doesn't subscribed on thread with id '" + str(data["thread"]) + "'"})
+	if (dbConnection.execQuery("SELECT COUNT(*) FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"], data["thread"], )))[0][0]:
+		subscribe = dbConnection.execQuery("SELECT id_subscribing,email_subscriber FROM subscribe WHERE id_subscribing = %s AND email_subscriber = %s;",(data["thread"], data["user"], ))
+		dbConnection.execQuery("DELETE FROM subscribe WHERE email_subscriber = %s AND id_subscribing = %s;",(data["user"],data["thread"], ))
 	return OrderedDict(zip(("thread","user"),subscribe[0]))
 
 def update(data):
